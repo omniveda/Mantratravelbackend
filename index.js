@@ -86,20 +86,31 @@ apiRouter.get("/health", (req, res) => {
     });
 });
 
-// Root endpoint
-app.get("/", (req, res) => {
-    res.json({
-        status: "success",
-        message: "Casino Backend API",
-        version: "1.0.0",
-        environment: process.env.NODE_ENV || "development",
-        endpoints: {
-            docs: "/api-docs", // Consider adding API documentation
-            blogs: "/api/blogs",
-            auth: "/api/auth",
-        },
+// Serve static files in production
+if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "production ") {
+    // Set static folder
+    app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+    // Handle React routing, return all requests to React app
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "../frontend", "build", "index.html"));
     });
-});
+} else {
+    // Root endpoint for development
+    app.get("/", (req, res) => {
+        res.json({
+            status: "success",
+            message: "Casino Backend API",
+            version: "1.0.0",
+            environment: process.env.NODE_ENV || "development",
+            endpoints: {
+                docs: "/api-docs",
+                blogs: "/api/blogs",
+                auth: "/api/auth",
+            },
+        });
+    });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
