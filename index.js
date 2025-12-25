@@ -24,7 +24,7 @@ database.connect();
 
 // Enhanced CORS configuration
 const corsOptions = {
-    origin: ["*","localhost:3000", "mantratravelfrontend.vercel.app"], // Allow all origins for troubleshooting
+    origin: ["https://mantratravelfrontend.vercel.app"], // Allow all origins for troubleshooting
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
         "Content-Type",
