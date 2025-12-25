@@ -24,12 +24,7 @@ database.connect();
 
 // Enhanced CORS configuration
 const corsOptions = {
-    origin: [
-        "http://localhost:3000",
-        "https://mrgamblers.com",
-        "https://casino-backened.onrender.com",
-        "https://gamblersguru.com",
-    ],
+    origin: ["*"], // Allow all origins for troubleshooting
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
         "Content-Type",
@@ -89,11 +84,11 @@ apiRouter.get("/health", (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "production ") {
     // Set static folder
-    app.use(express.static(path.join(__dirname, "../frontend/build")));
+    app.use(express.static(path.join(__dirname, "frontend/build")));
 
     // Handle React routing, return all requests to React app
     app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../frontend", "build", "index.html"));
+        res.sendFile(path.resolve(__dirname, "frontend", "build", "index.html"));
     });
 } else {
     // Root endpoint for development
