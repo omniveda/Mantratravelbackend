@@ -24,7 +24,7 @@ database.connect();
 
 // Enhanced CORS configuration
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://peru-hippopotamus-305287.hostingersite.com"], // Add your production frontend URL here
+    origin: ["http://localhost:3000", "https://voyabyte.com/"], // Add your production frontend URL here
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
         "Content-Type",
