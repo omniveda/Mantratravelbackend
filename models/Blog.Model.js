@@ -23,6 +23,14 @@ const BlogSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    images: [String],
+    paragraphs: [String],
+    content: [
+      {
+        type: { type: String },
+        value: mongoose.Schema.Types.Mixed,
+      },
+    ],
     tags: [String],
   },
   { timestamps: true }

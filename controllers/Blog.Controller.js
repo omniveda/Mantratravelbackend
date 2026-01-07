@@ -32,21 +32,46 @@ exports.getBlogById = async (req, res) => {
 // Create blog
 exports.createBlog = async (req, res) => {
   try {
-    const { heading, description, author, tags } = req.body;
-    let image = "";
+    const { heading, author, tags, content } = req.body;
+    let parsedContent = [];
 
-    if (req.files && req.files.image) {
-      const uploadDetails = await uploadImageToCloudinary(
-        req.files.image,
-        process.env.FOLDER_NAME || "mantra-blogs"
-      );
-      image = uploadDetails.secure_url;
+    if (typeof content === "string") {
+      try {
+        parsedContent = JSON.parse(content);
+      } catch (e) {
+        parsedContent = [];
+      }
+    } else {
+      parsedContent = content || [];
     }
 
-    // tags might come as stringified array or simply string
+    let images = [];
+
+    // Handle images within content
+    // We expect the frontend to send files with keys like 'image_0', 'image_1' etc.
+    if (req.files) {
+      for (let i = 0; i < parsedContent.length; i++) {
+        const section = parsedContent[i];
+        if (section.type === "image" && section.isNewFile) {
+          const fileKey = `image_${i}`;
+          if (req.files[fileKey]) {
+            const uploadDetails = await uploadImageToCloudinary(
+              req.files[fileKey],
+              process.env.FOLDER_NAME || "mantra-blogs"
+            );
+            section.value = uploadDetails.secure_url;
+            delete section.isNewFile;
+            images.push(uploadDetails.secure_url);
+          }
+        } else if (section.type === "image" && typeof section.value === "string") {
+          images.push(section.value);
+        }
+      }
+    }
+
+    // tags parsing
     let parsedTags = tags;
     if (typeof tags === "string") {
-      // Try parsing if it's JSON string, or split by comma
       try {
         parsedTags = JSON.parse(tags);
       } catch (e) {
@@ -56,10 +81,14 @@ exports.createBlog = async (req, res) => {
 
     const blog = new Blog({
       heading,
-      description,
       author,
-      image,
+      image: images[0] || "",
+      images,
+      content: parsedContent,
       tags: parsedTags,
+      // For backward compatibility and list display
+      description: parsedContent.find(c => c.type === "paragraph")?.value || "",
+      paragraphs: parsedContent.filter(c => c.type === "paragraph").map(c => c.value),
     });
 
     const savedBlog = await blog.save();
@@ -73,8 +102,8 @@ exports.createBlog = async (req, res) => {
 // Update blog
 exports.updateBlog = async (req, res) => {
   try {
-    const { heading, description, author, tags } = req.body;
-    let updateData = { heading, description, author };
+    const { heading, author, tags, content } = req.body;
+    let updateData = { heading, author };
 
     if (tags) {
       let parsedTags = tags;
@@ -88,12 +117,41 @@ exports.updateBlog = async (req, res) => {
       updateData.tags = parsedTags;
     }
 
-    if (req.files && req.files.image) {
-      const uploadDetails = await uploadImageToCloudinary(
-        req.files.image,
-        process.env.FOLDER_NAME || "mantra-blogs"
-      );
-      updateData.image = uploadDetails.secure_url;
+    if (content) {
+      let parsedContent = [];
+      try {
+        parsedContent = typeof content === "string" ? JSON.parse(content) : content;
+      } catch (e) {
+        parsedContent = [];
+      }
+
+      let images = [];
+      // Process images in content
+      for (let i = 0; i < parsedContent.length; i++) {
+        const section = parsedContent[i];
+        if (section.type === "image") {
+          if (section.isNewFile) {
+            const fileKey = `image_${i}`;
+            if (req.files && req.files[fileKey]) {
+              const uploadDetails = await uploadImageToCloudinary(
+                req.files[fileKey],
+                process.env.FOLDER_NAME || "mantra-blogs"
+              );
+              section.value = uploadDetails.secure_url;
+              delete section.isNewFile;
+            }
+          }
+          if (typeof section.value === "string" && section.value.startsWith("http")) {
+            images.push(section.value);
+          }
+        }
+      }
+
+      updateData.content = parsedContent;
+      updateData.images = images;
+      updateData.image = images[0] || "";
+      updateData.paragraphs = parsedContent.filter(c => c.type === "paragraph").map(c => c.value);
+      updateData.description = updateData.paragraphs[0] || "";
     }
 
     const blog = await Blog.findByIdAndUpdate(req.params.id, updateData, {
