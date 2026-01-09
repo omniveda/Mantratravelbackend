@@ -38,18 +38,43 @@ exports.getNewsById = async (req, res) => {
 // Create news
 exports.createNews = async (req, res) => {
     try {
-        const { heading, subHeading, description, author, category, tags } = req.body;
-        let image = "";
+        const { heading, subHeading, description, author, category, tags, content, supporter_opinion, opponent_opinion, neutral_opinion } = req.body;
 
-        if (req.files && req.files.image) {
-            const uploadDetails = await uploadImageToCloudinary(
-                req.files.image,
-                process.env.FOLDER_NAME || "mantra-news"
-            );
-            image = uploadDetails.secure_url;
+        let parsedContent = [];
+        if (typeof content === "string") {
+            try {
+                parsedContent = JSON.parse(content);
+            } catch (e) {
+                parsedContent = [];
+            }
+        } else {
+            parsedContent = content || [];
         }
 
-        // tags might come as stringified array or simply string
+        let images = [];
+
+        // Handle images within content
+        if (req.files) {
+            for (let i = 0; i < parsedContent.length; i++) {
+                const section = parsedContent[i];
+                if (section.type === "image" && section.isNewFile) {
+                    const fileKey = `image_${i}`;
+                    if (req.files[fileKey]) {
+                        const uploadDetails = await uploadImageToCloudinary(
+                            req.files[fileKey],
+                            process.env.FOLDER_NAME || "mantra-news"
+                        );
+                        section.value = uploadDetails.secure_url;
+                        delete section.isNewFile;
+                        images.push(uploadDetails.secure_url);
+                    }
+                } else if (section.type === "image" && typeof section.value === "string") {
+                    images.push(section.value);
+                }
+            }
+        }
+
+        // tags parsing
         let parsedTags = tags;
         if (typeof tags === "string") {
             try {
@@ -62,11 +87,18 @@ exports.createNews = async (req, res) => {
         const news = new News({
             heading,
             subHeading,
-            description,
             author,
-            image,
             category: category || "General",
             tags: parsedTags,
+            image: images[0] || "",
+            images,
+            content: parsedContent,
+            supporter_opinion: supporter_opinion || "",
+            opponent_opinion: opponent_opinion || "",
+            neutral_opinion: neutral_opinion || "",
+            // For backward compatibility
+            description: description || parsedContent.find(c => c.type === "paragraph")?.value || "",
+            paragraphs: parsedContent.filter(c => c.type === "paragraph").map(c => c.value),
         });
 
         const savedNews = await news.save();
@@ -80,8 +112,8 @@ exports.createNews = async (req, res) => {
 // Update news
 exports.updateNews = async (req, res) => {
     try {
-        const { heading, subHeading, description, author, category, tags } = req.body;
-        let updateData = { heading, subHeading, description, author, category };
+        const { heading, subHeading, description, author, category, tags, content, supporter_opinion, opponent_opinion, neutral_opinion } = req.body;
+        let updateData = { heading, subHeading, author, category, supporter_opinion, opponent_opinion, neutral_opinion };
 
         if (tags) {
             let parsedTags = tags;
@@ -95,12 +127,41 @@ exports.updateNews = async (req, res) => {
             updateData.tags = parsedTags;
         }
 
-        if (req.files && req.files.image) {
-            const uploadDetails = await uploadImageToCloudinary(
-                req.files.image,
-                process.env.FOLDER_NAME || "mantra-news"
-            );
-            updateData.image = uploadDetails.secure_url;
+        if (content) {
+            let parsedContent = [];
+            try {
+                parsedContent = typeof content === "string" ? JSON.parse(content) : content;
+            } catch (e) {
+                parsedContent = [];
+            }
+
+            let images = [];
+            // Process images in content
+            for (let i = 0; i < parsedContent.length; i++) {
+                const section = parsedContent[i];
+                if (section.type === "image") {
+                    if (section.isNewFile) {
+                        const fileKey = `image_${i}`;
+                        if (req.files && req.files[fileKey]) {
+                            const uploadDetails = await uploadImageToCloudinary(
+                                req.files[fileKey],
+                                process.env.FOLDER_NAME || "mantra-news"
+                            );
+                            section.value = uploadDetails.secure_url;
+                            delete section.isNewFile;
+                        }
+                    }
+                    if (typeof section.value === "string" && section.value.startsWith("http")) {
+                        images.push(section.value);
+                    }
+                }
+            }
+
+            updateData.content = parsedContent;
+            updateData.images = images;
+            updateData.image = images[0] || "";
+            updateData.paragraphs = parsedContent.filter(c => c.type === "paragraph").map(c => c.value);
+            updateData.description = description || updateData.paragraphs[0] || "";
         }
 
         const news = await News.findByIdAndUpdate(req.params.id, updateData, {

@@ -7,7 +7,7 @@ exports.getAllBlogs = async (req, res) => {
     const { tag } = req.query;
     let query = {};
     if (tag) {
-      query = { tags: { $in: [tag] } };
+      query = { tags: { $regex: new RegExp(`^${tag}$`, "i") } };
     }
     const blogs = await Blog.find(query).sort({ publishDate: -1 });
     res.json(blogs);

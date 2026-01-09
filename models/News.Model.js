@@ -28,6 +28,26 @@ const NewsSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        images: [String],
+        paragraphs: [String],
+        content: [
+            {
+                type: { type: String },
+                value: mongoose.Schema.Types.Mixed,
+            },
+        ],
+        supporter_opinion: {
+            type: String,
+            default: "",
+        },
+        opponent_opinion: {
+            type: String,
+            default: "",
+        },
+        neutral_opinion: {
+            type: String,
+            default: "",
+        },
         category: {
             type: String,
             // Enum to strictly categorize news for the UI layout
