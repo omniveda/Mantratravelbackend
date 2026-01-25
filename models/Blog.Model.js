@@ -32,6 +32,23 @@ const BlogSchema = new mongoose.Schema(
       },
     ],
     tags: [String],
+    country: {
+      type: String,
+      default: "General",
+    },
+    category: {
+      type: String,
+      enum: ["Blog", "Destination"],
+      default: "Blog",
+    },
+    section: {
+      type: String,
+      default: "General", // e.g., Explorer, States, Instagram, Hero, Testimonials
+    },
+    externalLink: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

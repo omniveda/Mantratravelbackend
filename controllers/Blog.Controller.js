@@ -4,10 +4,19 @@ const { uploadImageToCloudinary } = require("../utils/imageUploader");
 // Get all blogs
 exports.getAllBlogs = async (req, res) => {
   try {
-    const { tag } = req.query;
+    const { tag, country, category, section } = req.query;
     let query = {};
     if (tag) {
-      query = { tags: { $regex: new RegExp(`^${tag}$`, "i") } };
+      query.tags = { $regex: new RegExp(`^${tag}$`, "i") };
+    }
+    if (country) {
+      query.country = country;
+    }
+    if (category) {
+      query.category = category;
+    }
+    if (section) {
+      query.section = section;
     }
     const blogs = await Blog.find(query).sort({ publishDate: -1 });
     res.json(blogs);
@@ -32,7 +41,7 @@ exports.getBlogById = async (req, res) => {
 // Create blog
 exports.createBlog = async (req, res) => {
   try {
-    const { heading, author, tags, content } = req.body;
+    const { heading, author, tags, content, country, category, section, externalLink } = req.body;
     let parsedContent = [];
 
     if (typeof content === "string") {
@@ -86,6 +95,10 @@ exports.createBlog = async (req, res) => {
       images,
       content: parsedContent,
       tags: parsedTags,
+      country: country || "General",
+      category: category || "Blog",
+      section: section || "General",
+      externalLink: externalLink || "",
       // For backward compatibility and list display
       description: parsedContent.find(c => c.type === "paragraph")?.value || "",
       paragraphs: parsedContent.filter(c => c.type === "paragraph").map(c => c.value),
@@ -102,8 +115,8 @@ exports.createBlog = async (req, res) => {
 // Update blog
 exports.updateBlog = async (req, res) => {
   try {
-    const { heading, author, tags, content } = req.body;
-    let updateData = { heading, author };
+    const { heading, author, tags, content, country, category, section, externalLink } = req.body;
+    let updateData = { heading, author, country, category, section, externalLink };
 
     if (tags) {
       let parsedTags = tags;
