@@ -4,7 +4,7 @@ const { uploadImageToCloudinary } = require("../utils/imageUploader");
 // Get all blogs
 exports.getAllBlogs = async (req, res) => {
   try {
-    const { tag, country, category, section } = req.query;
+    const { tag, country, category, section, fallback } = req.query;
     let query = {};
     if (tag) {
       query.tags = { $regex: new RegExp(`^${tag}$`, "i") };
@@ -18,7 +18,17 @@ exports.getAllBlogs = async (req, res) => {
     if (section) {
       query.section = section;
     }
-    const blogs = await Blog.find(query).sort({ publishDate: -1 });
+
+    let blogs = await Blog.find(query).sort({ publishDate: -1 });
+
+    // Smart Fallback Logic:
+    // If no blogs found for the specific country and a fallback is provided,
+    // try fetching with the fallback country (usually "General").
+    if (blogs.length === 0 && country && fallback && country !== fallback) {
+      query.country = fallback;
+      blogs = await Blog.find(query).sort({ publishDate: -1 });
+    }
+
     res.json(blogs);
   } catch (err) {
     res.status(500).json({ message: err.message });
