@@ -21,6 +21,7 @@ const InstagramSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        tags: [String],
     },
     { timestamps: true }
 );

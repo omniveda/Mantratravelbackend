@@ -6,6 +6,9 @@ const auth = require("../middlewares/auth");
 // Get all Instagram accounts (Public)
 router.get("/", instagramController.getAllInstagrams);
 
+//Get all Instagram accounts by all tags
+router.get("/tags", instagramController.getAllInstagramsByTags);
+
 // Create Instagram account (Admin only)
 router.post("/", auth, instagramController.createInstagram);
 

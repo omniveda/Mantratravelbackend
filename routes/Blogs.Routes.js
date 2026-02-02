@@ -6,6 +6,9 @@ const auth = require("../middlewares/auth");
 // Get all blogs
 router.get("/", blogController.getAllBlogs);
 
+// Get blogs by multiple tags
+router.get("/tags", blogController.getBlogsByTags);
+
 // Get single blog
 router.get("/:id", blogController.getBlogById);
 

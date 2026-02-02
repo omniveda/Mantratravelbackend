@@ -24,6 +24,22 @@ exports.getAllInstagrams = async (req, res) => {
     }
 };
 
+// Get all Instagram accounts by all tags
+exports.getAllInstagramsByTags = async (req, res) => {
+    try {
+        const { tags } = req.query;
+        let query = {};
+        if (tags) {
+            query.tags = { $all: tags.split(",") };
+        }
+
+        let instagrams = await Instagram.find(query).sort({ createdAt: -1 });
+        res.json(instagrams);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 // Create Instagram account
 exports.createInstagram = async (req, res) => {
     try {

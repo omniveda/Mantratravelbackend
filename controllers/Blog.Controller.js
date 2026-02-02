@@ -10,13 +10,47 @@ exports.getAllBlogs = async (req, res) => {
       query.tags = { $regex: new RegExp(`^${tag}$`, "i") };
     }
     if (country) {
-      query.country = country;
+      query.country = { $regex: new RegExp(`^${country}$`, "i") };
     }
     if (category) {
-      query.category = category;
+      query.category = { $regex: new RegExp(`^${category}$`, "i") };
     }
     if (section) {
-      query.section = section;
+      query.section = { $regex: new RegExp(`^${section}$`, "i") };
+    }
+
+    let blogs = await Blog.find(query).sort({ publishDate: -1 });
+
+    // Smart Fallback Logic:
+    // If no blogs found for the specific country and a fallback is provided,
+    // try fetching with the fallback country (usually "General").
+    if (blogs.length === 0 && country && fallback && country !== fallback) {
+      query.country = fallback;
+      blogs = await Blog.find(query).sort({ publishDate: -1 });
+    }
+
+    res.json(blogs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get blogs by multiple tags
+exports.getBlogsByTags = async (req, res) => {
+  try {
+    const { tags, country, category, section, fallback } = req.query;
+    let query = {};
+    if (tags) {
+      query.tags = { $all: tags.split(",") };
+    }
+    if (country) {
+      query.country = { $regex: new RegExp(`^${country}$`, "i") };
+    }
+    if (category) {
+      query.category = { $regex: new RegExp(`^${category}$`, "i") };
+    }
+    if (section) {
+      query.section = { $regex: new RegExp(`^${section}$`, "i") };
     }
 
     let blogs = await Blog.find(query).sort({ publishDate: -1 });
