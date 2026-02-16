@@ -46,6 +46,7 @@ apiRouter.use("/products", require("./routes/Product.Routes"));
 apiRouter.use("/instagram", require("./routes/Instagram.Routes"));
 apiRouter.use("/analytics", require("./routes/Analytics.Routes"));
 apiRouter.use("/seo", require("./routes/SEO.Routes"));
+apiRouter.use("/category-config", require("./routes/CategoryConfig.Routes"));
 
 // Health check endpoint
 apiRouter.get("/health", (req, res) => {

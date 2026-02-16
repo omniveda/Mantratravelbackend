@@ -51,7 +51,7 @@ const NewsSchema = new mongoose.Schema(
         category: {
             type: String,
             // Enum to strictly categorize news for the UI layout
-            enum: ["Top Story", "Headline", "Trending", "General"],
+            enum: ["Top Story", "Headline", "Trending", "General", "Featured", "Side Headline", "Grid Story", "More Story"],
             default: "General"
         },
         tags: [String],
