@@ -49,6 +49,18 @@ const BlogSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    metaTitle: {
+      type: String,
+      default: "",
+    },
+    metaDescription: {
+      type: String,
+      default: "",
+    },
+    metaTags: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

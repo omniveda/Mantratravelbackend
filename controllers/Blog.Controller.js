@@ -85,7 +85,7 @@ exports.getBlogById = async (req, res) => {
 // Create blog
 exports.createBlog = async (req, res) => {
   try {
-    const { heading, author, tags, content, country, category, section, externalLink } = req.body;
+    const { heading, author, tags, content, country, category, section, externalLink, metaTitle, metaDescription, metaTags } = req.body;
     let parsedContent = [];
 
     if (typeof content === "string") {
@@ -143,6 +143,9 @@ exports.createBlog = async (req, res) => {
       category: category || "Blog",
       section: section || "General",
       externalLink: externalLink || "",
+      metaTitle: metaTitle || "",
+      metaDescription: metaDescription || "",
+      metaTags: metaTags || "",
       // For backward compatibility and list display
       description: parsedContent.find(c => c.type === "paragraph")?.value || "",
       paragraphs: parsedContent.filter(c => c.type === "paragraph").map(c => c.value),
@@ -159,8 +162,8 @@ exports.createBlog = async (req, res) => {
 // Update blog
 exports.updateBlog = async (req, res) => {
   try {
-    const { heading, author, tags, content, country, category, section, externalLink } = req.body;
-    let updateData = { heading, author, country, category, section, externalLink };
+    const { heading, author, tags, content, country, category, section, externalLink, metaTitle, metaDescription, metaTags } = req.body;
+    let updateData = { heading, author, country, category, section, externalLink, metaTitle, metaDescription, metaTags };
 
     if (tags) {
       let parsedTags = tags;
